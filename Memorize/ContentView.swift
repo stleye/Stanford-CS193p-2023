@@ -7,42 +7,86 @@
 
 import SwiftUI
 
+let halloweenEmojis = ["🎃", "🎃", "👻", "👻", "🕷️", "🕷️", "🦇", "🦇"]
+let smileyEmojis = ["😄", "😄", "😃", "😃", "😁", "😁", "😆", "😆", "😅", "😅"]
+let transportEmojis = ["🚗", "🚗", "🚕", "🚕", "🚆", "🚆", "🚄", "🚄", "🚁", "🚁", "🚢", "🚢"]
+let animalEmojis = ["🐶", "🐱", "🐭", "🐹", "🐰", "🦊", "🐻", "🐶", "🐱", "🐭", "🐹", "🐰", "🦊", "🐻"]
+
 struct ContentView: View {
-    let emojis = ["👻", "👽", "🎃", "🕷️", "🐙", "🕸️", "🦀", "🍉", "🎂", "🎁"]
-    @State var cardCount = 4
+
+    enum Theme {
+        case halloween
+        case smiley
+        case transport
+        case animal
+
+        func icon() -> some View {
+            switch self {
+            case .halloween:
+                return Image(systemName: "house")
+            case .smiley:
+                return Image(systemName: "face.smiling")
+            case .transport:
+                return Image(systemName: "car")
+            case .animal:
+                return Image(systemName: "pawprint")
+            }
+        }
+
+        func title() -> some View {
+            switch self {
+            case .halloween:
+                return Text("Halloween")
+            case .smiley:
+                return Text("Smileys")
+            case .transport:
+                return Text("Transports")
+            case .animal:
+                return Text("Animals")
+            }
+        }
+    }
+
+    @State var theme: Theme = .transport {
+        didSet {
+            shuffleEmojis()
+        }
+    }
+
+    @State var emojis = halloweenEmojis
+
     var body: some View {
         VStack {
+            title
             ScrollView {
                 cards
             }
             Spacer()
-            cardCountAdjusters
+            themeButtons
         }
         .padding()
     }
-    
-    var cardCountAdjusters: some View {
-        HStack {
-            cardRemover
-            Spacer()
-            cardAdder
-        }
-        .imageScale(.large)
-        .font(.largeTitle)
+
+    var title: some View {
+        Text("Memorize!")
+            .font(.largeTitle)
     }
-    
-    func cardCountAdjuster(by offset: Int, symbol: String) -> some View {
-        Button(action: {
-            cardCount += offset
-        }, label: {
-            Image(systemName: symbol)
-        })
-        .disabled(cardCount + offset < 1 || cardCount + offset > emojis.count)
+
+    var themeButtons: some View {
+        HStack {
+            Spacer()
+            themeButton(.smiley)
+            Spacer()
+            themeButton(.transport)
+            Spacer()
+            themeButton(.animal)
+            Spacer()
+        }
     }
 
     var cards: some View {
-        LazyVGrid(columns: [GridItem(.adaptive(minimum: 120))]) {
-            ForEach(0..<cardCount, id: \.self) { index in
+        LazyVGrid(columns: [GridItem(.adaptive(minimum: 65))]) {
+            ForEach(0..<emojis.count, id: \.self) { index in
                 CardView(content: emojis[index])
                     .aspectRatio(2/3, contentMode: .fit)
             }
@@ -50,18 +94,35 @@ struct ContentView: View {
         .foregroundColor(.orange)
     }
 
-    var cardRemover: some View {
-        cardCountAdjuster(by: -1, symbol: "minus.circle")
+    func themeButton(_ theme: Theme) -> some View {
+        Button(action: {
+            self.theme = theme
+        }, label: {
+            VStack {
+                theme.icon().font(.largeTitle)
+                theme.title().font(.footnote)
+            }
+        })
     }
 
-    var cardAdder: some View {
-        cardCountAdjuster(by: 1, symbol: "plus.circle")
+    func shuffleEmojis() {
+        switch theme {
+        case .halloween:
+            self.emojis = halloweenEmojis.shuffled()
+        case .smiley:
+            self.emojis = smileyEmojis.shuffled()
+        case .transport:
+            self.emojis = transportEmojis.shuffled()
+        case .animal:
+            self.emojis = animalEmojis.shuffled()
+        }
     }
+
 }
 
 struct CardView: View {
     var content: String
-    @State var isFaceUp = true
+    @State var isFaceUp = false
     var body: some View {
         ZStack {
             let base = RoundedRectangle(cornerRadius: 12)
